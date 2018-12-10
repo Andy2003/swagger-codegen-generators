@@ -1,31 +1,14 @@
 package io.swagger.codegen.v3.generators.typescript;
 
-import io.swagger.codegen.v3.CliOption;
-import io.swagger.codegen.v3.CodegenConstants;
-import io.swagger.codegen.v3.CodegenModel;
-import io.swagger.codegen.v3.CodegenProperty;
-import io.swagger.codegen.v3.CodegenType;
+import io.swagger.codegen.v3.*;
 import io.swagger.codegen.v3.generators.DefaultCodegenConfig;
-import io.swagger.v3.oas.models.media.ArraySchema;
-import io.swagger.v3.oas.models.media.BooleanSchema;
-import io.swagger.v3.oas.models.media.DateSchema;
-import io.swagger.v3.oas.models.media.DateTimeSchema;
-import io.swagger.v3.oas.models.media.IntegerSchema;
-import io.swagger.v3.oas.models.media.MapSchema;
-import io.swagger.v3.oas.models.media.NumberSchema;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
+import io.swagger.v3.oas.models.media.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeSet;
+import java.util.*;
 
 import static io.swagger.codegen.v3.CodegenConstants.IS_ENUM_EXT_NAME;
 import static io.swagger.codegen.v3.generators.handlebars.ExtensionHelper.getBooleanValue;
@@ -36,7 +19,7 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
 
     private static final String UNDEFINED_VALUE = "undefined";
 
-    protected String modelPropertyNaming= "camelCase";
+    protected String modelPropertyNaming = "camelCase";
     protected Boolean supportsES6 = true;
     protected HashSet<String> languageGenericTypes;
 
@@ -72,15 +55,13 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
                 "File",
                 "Error",
                 "Map"
-                ));
-
-        languageGenericTypes = new HashSet<String>(Arrays.asList(
-                "Array"
         ));
+
+        languageGenericTypes = new HashSet<>(Collections.singletonList("Array"));
 
         instantiationTypes.put("array", "Array");
 
-        typeMapping = new HashMap<String, String>();
+        typeMapping = new HashMap<>();
         typeMapping.put("Array", "Array");
         typeMapping.put("array", "Array");
         typeMapping.put("List", "Array");
@@ -126,13 +107,44 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
     }
 
     @Override
+    protected void addAdditionPropertiesToCodeGenModel(CodegenModel codegenModel, Schema schema) {
+        if (schema.getAdditionalProperties() == null) {
+            return;
+        }
+        codegenModel.additionalPropertiesType = getTypeDeclaration((Schema) schema.getAdditionalProperties());
+        addImport(codegenModel, codegenModel.additionalPropertiesType);
+    }
+
+    @Override
+    public Map<String, Object> postProcessOperations(Map<String, Object> operations) {
+        // Add additional filename information for model imports in the services
+        List<Map<String, Object>> imports = (List<Map<String, Object>>) operations.get("imports");
+        for (Map<String, Object> im : imports) {
+            im.put("filename", im.get("import"));
+            im.put("classname", getModelnameFromModelFilename(im.get("filename").toString()));
+        }
+
+        return operations;
+    }
+
+    public String toInstantiationType(Schema property) {
+        if (property instanceof ArraySchema) {
+            ArraySchema arraySchema = (ArraySchema) property;
+            String inner = getSchemaType(arraySchema.getItems());
+            return instantiationTypes.get("array") + "<" + inner + ">";
+        } else {
+            return null;
+        }
+    }
+
+    @Override
     public CodegenType getTag() {
         return CodegenType.CLIENT;
     }
 
     @Override
     public String escapeReservedWord(String name) {
-        if(this.reservedWordsMappings().containsKey(name)) {
+        if (this.reservedWordsMappings().containsKey(name)) {
             return this.reservedWordsMappings().get(name);
         }
         return "_" + name;
@@ -159,7 +171,7 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
         // sanitize name
         name = sanitizeName(name);
 
-        if("_".equals(name)) {
+        if ("_".equals(name)) {
             name = "_u";
         }
 
@@ -223,14 +235,21 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
 
     @Override
     public String getTypeDeclaration(Schema propertySchema) {
+        Schema inner;
         if (propertySchema instanceof ArraySchema) {
-            Schema inner = ((ArraySchema) propertySchema).getItems();
-            return String.format("%s<%s>", getSchemaType(propertySchema), getTypeDeclaration(inner));
+            ArraySchema arraySchema = (ArraySchema) propertySchema;
+            inner = arraySchema.getItems();
+            return this.getSchemaType(propertySchema) + "<" + this.getTypeDeclaration(inner) + ">";
         } else if (propertySchema instanceof MapSchema && propertySchema.getAdditionalProperties() != null) {
-            Schema inner = (Schema) propertySchema.getAdditionalProperties();
-            return String.format("{ [key, string]: %s;}", getTypeDeclaration(inner));
+            inner = (Schema) propertySchema.getAdditionalProperties();
+            return "{ [key: string]: " + this.getTypeDeclaration(inner) + "; }";
+        } else if (propertySchema instanceof FileSchema) {
+            return "Blob";
+        } else if (propertySchema instanceof ObjectSchema) {
+            return "any";
+        } else {
+            return super.getTypeDeclaration(propertySchema);
         }
-        return super.getTypeDeclaration(propertySchema);
     }
 
     @Override
@@ -267,7 +286,7 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
     @Override
     public String getSchemaType(Schema schema) {
         String swaggerType = super.getSchemaType(schema);
-        String type = null;
+        String type;
         if (typeMapping.containsKey(swaggerType)) {
             type = typeMapping.get(swaggerType);
             if (languageSpecificPrimitives.contains(type))
@@ -295,12 +314,12 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
 
     public void setModelPropertyNaming(String naming) {
         if ("original".equals(naming) || "camelCase".equals(naming) ||
-            "PascalCase".equals(naming) || "snake_case".equals(naming)) {
+                "PascalCase".equals(naming) || "snake_case".equals(naming)) {
             this.modelPropertyNaming = naming;
         } else {
             throw new IllegalArgumentException("Invalid model property naming '" +
-                                               naming + "'. Must be 'original', 'camelCase', " +
-                                               "'PascalCase' or 'snake_case'");
+                    naming + "'. Must be 'original', 'camelCase', " +
+                    "'PascalCase' or 'snake_case'");
         }
     }
 
@@ -310,13 +329,18 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
 
     public String getNameUsingModelPropertyNaming(String name) {
         switch (CodegenConstants.MODEL_PROPERTY_NAMING_TYPE.valueOf(getModelPropertyNaming())) {
-            case original:    return name;
-            case camelCase:   return camelize(name, true);
-            case PascalCase:  return camelize(name);
-            case snake_case:  return underscore(name);
-            default:          throw new IllegalArgumentException("Invalid model property naming '" +
-                                                                 name + "'. Must be 'original', 'camelCase', " +
-                                                                 "'PascalCase' or 'snake_case'");
+            case original:
+                return name;
+            case camelCase:
+                return camelize(name, true);
+            case PascalCase:
+                return camelize(name);
+            case snake_case:
+                return underscore(name);
+            default:
+                throw new IllegalArgumentException("Invalid model property naming '" +
+                        name + "'. Must be 'original', 'camelCase', " +
+                        "'PascalCase' or 'snake_case'");
         }
 
     }
@@ -390,7 +414,8 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
         for (Object _mo : models) {
             Map<String, Object> mo = (Map<String, Object>) _mo;
             CodegenModel cm = (CodegenModel) mo.get("model");
-            cm.imports = new TreeSet(cm.imports);
+            cm.imports = new TreeSet<>(cm.imports);
+            mo.put("tsImports", toTsImports(cm, cm.imports));
             for (CodegenProperty var : cm.vars) {
                 // name enum with model name, e.g. StatuEnum => Pet.StatusEnum
                 boolean isEnum = getBooleanValue(var, IS_ENUM_EXT_NAME);
@@ -398,10 +423,29 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
                     var.datatypeWithEnum = var.datatypeWithEnum.replace(var.enumName, cm.classname + "." + var.enumName);
                 }
             }
-        } 
+        }
 
         return objs;
     }
+
+    private List<Map<String, String>> toTsImports(CodegenModel cm, Set<String> imports) {
+        List<Map<String, String>> tsImports = new ArrayList<>();
+        for (String im : imports) {
+            if (!im.equals(cm.classname)) {
+                HashMap<String, String> tsImport = new HashMap<>();
+                tsImport.put("classname", im);
+                tsImport.put("filename", toModelFilename(im));
+                tsImports.add(tsImport);
+            }
+        }
+        return tsImports;
+    }
+
+    @Override
+    public String toModelImport(String name) {
+        return modelPackage() + File.separator + toModelFilename(name);
+    }
+
 
     public void setSupportsES6(Boolean value) {
         supportsES6 = value;
@@ -420,5 +464,10 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
     @Override
     public String escapeUnsafeCharacters(String input) {
         return input.replace("*/", "*_/").replace("/*", "/_*");
+    }
+
+    protected String getModelnameFromModelFilename(String filename) {
+        String name = filename.substring((modelPackage() + File.separator).length());
+        return camelize(name);
     }
 }

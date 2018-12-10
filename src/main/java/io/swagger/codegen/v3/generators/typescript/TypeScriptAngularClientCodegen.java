@@ -1,30 +1,22 @@
 package io.swagger.codegen.v3.generators.typescript;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-
 import io.swagger.codegen.v3.CliOption;
-import io.swagger.codegen.v3.CodegenModel;
-import io.swagger.codegen.v3.CodegenParameter;
 import io.swagger.codegen.v3.CodegenOperation;
+import io.swagger.codegen.v3.CodegenParameter;
 import io.swagger.codegen.v3.SupportingFile;
 import io.swagger.codegen.v3.utils.SemVer;
-import io.swagger.v3.oas.models.media.ArraySchema;
-import io.swagger.v3.oas.models.media.FileSchema;
-import io.swagger.v3.oas.models.media.MapSchema;
-import io.swagger.v3.oas.models.media.ObjectSchema;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.parser.util.SchemaTypeUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCodegen {
 
@@ -53,15 +45,6 @@ public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCode
         this.cliOptions.add(new CliOption(SNAPSHOT, "When setting this property to true the version will be suffixed with -SNAPSHOT.yyyyMMddHHmm", SchemaTypeUtil.BOOLEAN_TYPE).defaultValue(Boolean.FALSE.toString()));
         this.cliOptions.add(new CliOption(WITH_INTERFACES, "Setting this property to true will generate interfaces next to the default class implementations.", SchemaTypeUtil.BOOLEAN_TYPE).defaultValue(Boolean.FALSE.toString()));
         this.cliOptions.add(new CliOption(NG_VERSION, "The version of Angular. Default is '4.3'"));
-    }
-
-    @Override
-    protected void addAdditionPropertiesToCodeGenModel(CodegenModel codegenModel, Schema schema) {
-        if (schema.getAdditionalProperties() == null) {
-            return;
-        }
-        codegenModel.additionalPropertiesType = getTypeDeclaration((Schema) schema.getAdditionalProperties());
-        addImport(codegenModel, codegenModel.additionalPropertiesType);
     }
 
     @Override
@@ -179,28 +162,9 @@ public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCode
     }
 
     @Override
-    public String getTypeDeclaration(Schema propertySchema) {
-        Schema inner;
-        if(propertySchema instanceof ArraySchema) {
-            ArraySchema arraySchema = (ArraySchema)propertySchema;
-            inner = arraySchema.getItems();
-            return this.getSchemaType(propertySchema) + "<" + this.getTypeDeclaration(inner) + ">";
-        } else if(propertySchema instanceof MapSchema && propertySchema.getAdditionalProperties() != null) {
-            inner = (Schema) propertySchema.getAdditionalProperties();
-            return "{ [key: string]: " + this.getTypeDeclaration(inner) + "; }";
-        } else if(propertySchema instanceof FileSchema) {
-            return "Blob";
-        } else if(propertySchema instanceof ObjectSchema) {
-            return "any";
-        } else {
-            return super.getTypeDeclaration(propertySchema);
-        }
-    }
-
-    @Override
     public String getSchemaType(Schema schema) {
         String swaggerType = super.getSchemaType(schema);
-        if(isLanguagePrimitive(swaggerType) || isLanguageGenericType(swaggerType)) {
+        if (isLanguagePrimitive(swaggerType) || isLanguageGenericType(swaggerType)) {
             return swaggerType;
         }
         applyLocalTypeMapping(swaggerType);
@@ -235,6 +199,8 @@ public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCode
 
     @Override
     public Map<String, Object> postProcessOperations(Map<String, Object> operations) {
+        operations = super.postProcessOperations(operations);
+
         Map<String, Object> objs = (Map<String, Object>) operations.get("operations");
 
         // Add filename information for api imports
@@ -248,29 +214,29 @@ public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCode
                 // Convert httpMethod to Angular's RequestMethod enum
                 // https://angular.io/docs/ts/latest/api/http/index/RequestMethod-enum.html
                 switch (op.httpMethod) {
-                case "GET":
-                    op.httpMethod = "RequestMethod.Get";
-                    break;
-                case "POST":
-                    op.httpMethod = "RequestMethod.Post";
-                    break;
-                case "PUT":
-                    op.httpMethod = "RequestMethod.Put";
-                    break;
-                case "DELETE":
-                    op.httpMethod = "RequestMethod.Delete";
-                    break;
-                case "OPTIONS":
-                    op.httpMethod = "RequestMethod.Options";
-                    break;
-                case "HEAD":
-                    op.httpMethod = "RequestMethod.Head";
-                    break;
-                case "PATCH":
-                    op.httpMethod = "RequestMethod.Patch";
-                    break;
-                default:
-                    throw new RuntimeException("Unknown HTTP Method " + op.httpMethod + " not allowed");
+                    case "GET":
+                        op.httpMethod = "RequestMethod.Get";
+                        break;
+                    case "POST":
+                        op.httpMethod = "RequestMethod.Post";
+                        break;
+                    case "PUT":
+                        op.httpMethod = "RequestMethod.Put";
+                        break;
+                    case "DELETE":
+                        op.httpMethod = "RequestMethod.Delete";
+                        break;
+                    case "OPTIONS":
+                        op.httpMethod = "RequestMethod.Options";
+                        break;
+                    case "HEAD":
+                        op.httpMethod = "RequestMethod.Head";
+                        break;
+                    case "PATCH":
+                        op.httpMethod = "RequestMethod.Patch";
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown HTTP Method " + op.httpMethod + " not allowed");
                 }
             }
 
@@ -282,29 +248,29 @@ public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCode
             // Iterate through existing string, one character at a time.
             for (int i = 0; i < op.path.length(); i++) {
                 switch (op.path.charAt(i)) {
-                case '{':
-                    // We entered curly braces, so track that.
-                    insideCurly++;
+                    case '{':
+                        // We entered curly braces, so track that.
+                        insideCurly++;
 
-                    // Add the more complicated component instead of just the brace.
-                    pathBuffer.append("${encodeURIComponent(String(");
-                    break;
-                case '}':
-                    // We exited curly braces, so track that.
-                    insideCurly--;
+                        // Add the more complicated component instead of just the brace.
+                        pathBuffer.append("${encodeURIComponent(String(");
+                        break;
+                    case '}':
+                        // We exited curly braces, so track that.
+                        insideCurly--;
 
-                    // Add the more complicated component instead of just the brace.
-                    pathBuffer.append(toVarName(parameterName.toString()));
-                    pathBuffer.append("))}");
-                    parameterName.setLength(0);
-                    break;
-                default:
-                    if (insideCurly > 0) {
-                        parameterName.append(op.path.charAt(i));
-                    } else {
-                        pathBuffer.append(op.path.charAt(i));
-                    }
-                    break;
+                        // Add the more complicated component instead of just the brace.
+                        pathBuffer.append(toVarName(parameterName.toString()));
+                        pathBuffer.append("))}");
+                        parameterName.setLength(0);
+                        break;
+                    default:
+                        if (insideCurly > 0) {
+                            parameterName.append(op.path.charAt(i));
+                        } else {
+                            pathBuffer.append(op.path.charAt(i));
+                        }
+                        break;
                 }
             }
 
@@ -312,42 +278,7 @@ public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCode
             op.path = pathBuffer.toString();
         }
 
-        // Add additional filename information for model imports in the services
-        List<Map<String, Object>> imports = (List<Map<String, Object>>) operations.get("imports");
-        for (Map<String, Object> im : imports) {
-            im.put("filename", im.get("import"));
-            im.put("classname", getModelnameFromModelFilename(im.get("filename").toString()));
-        }
-
         return operations;
-    }
-
-    @Override
-    public Map<String, Object> postProcessModels(Map<String, Object> objs) {
-        Map<String, Object> result = super.postProcessModels(objs);
-
-        // Add additional filename information for imports
-        List<Object> models = (List<Object>) postProcessModelsEnum(result).get("models");
-        for (Object _mo : models) {
-            Map<String, Object> mo = (Map<String, Object>) _mo;
-            CodegenModel cm = (CodegenModel) mo.get("model");
-            mo.put("tsImports", toTsImports(cm, cm.imports));
-        }
-
-        return result;
-    }
-
-    private List<Map<String, String>> toTsImports(CodegenModel cm, Set<String> imports) {
-        List<Map<String, String>> tsImports = new ArrayList<>();
-        for (String im : imports) {
-            if (!im.equals(cm.classname)) {
-                HashMap<String, String> tsImport = new HashMap<>();
-                tsImport.put("classname", im);
-                tsImport.put("filename", toModelFilename(im));
-                tsImports.add(tsImport);
-            }
-        }
-        return tsImports;
     }
 
     @Override
@@ -374,11 +305,6 @@ public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCode
     @Override
     public String toModelFilename(String name) {
         return camelize(toModelName(name), true);
-    }
-
-    @Override
-    public String toModelImport(String name) {
-        return modelPackage() + File.separator + toModelFilename(name);
     }
 
     public String getNpmName() {
@@ -408,11 +334,6 @@ public class TypeScriptAngularClientCodegen extends AbstractTypeScriptClientCode
     private String getApiFilenameFromClassname(String classname) {
         String name = classname.substring(0, classname.length() - "Service".length());
         return toApiFilename(name);
-    }
-
-    private String getModelnameFromModelFilename(String filename) {
-        String name = filename.substring((modelPackage() + File.separator).length());
-        return camelize(name);
     }
 
 }

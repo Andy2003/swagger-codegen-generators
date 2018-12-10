@@ -1,0 +1,56 @@
+{{>licenseInfo}}
+
+{{#imports}}
+import { {{classname}} } from '../{{filename}}';
+{{/imports}}
+
+
+{{#description}}
+	/**
+	* {{&description}}
+	*/
+{{/description}}
+export interface {{classname}} {
+{{#operations}}
+{{#operation}}
+	/**
+	{{#summary}}
+	 * {{summary}}
+	{{/summary}}
+	{{#description}}
+	 * {{description}}
+	{{/description}}
+	{{#notes}}
+	 * {{notes}}
+	{{/notes}}
+	{{#isDeprecated}}
+	 * @deprecated
+	{{/isDeprecated}}
+	 */
+	{{nickname}}: (
+		params:{ {{#allParams}}{{#isNot this 'body-param'}}{{#description}}
+			/**
+			* {{description}}
+			*/{{/description}}
+			{{paramName}}{{^required}}?{{/required}}: {{{dataType}}}{{^@last}},
+			{{/@last}}{{/isNot}}{{/allParams}}
+
+		},
+		options{{#bodyParam}}{{^required}}?{{/required}}{{/bodyParam}}{{^bodyParam}}?{{/bodyParam}}:{
+			{{#bodyParam}}{{#description}}
+			/**
+			* {{description}}
+			*/{{/description}}
+			requestBody{{^required}}?{{/required}}: {{{dataType}}}{{/bodyParam}}
+		}
+	) => {{#responses}}
+		{{^@first}}| {{/@first}}{
+			/** {{message}} */
+			status: {{code}}{{#dataType}},
+			/** {{message}} */
+			body: {{{dataType}}}{{/dataType}}
+		}{{/responses}}
+
+{{/operation}}
+{{/operations}}
+}
