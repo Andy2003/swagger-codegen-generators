@@ -1,12 +1,13 @@
 {
 	"name": "{{npmName}}",
 	"version": "{{{npmVersion}}}",
-	"description": "swagger client for {{{npmName}}}",
-	"author": "Swagger Codegen Contributors",
+	"description": "{{{appDescription}}}",
+	"author": "{{{infoName}}} {{{infoEmail}}}",
+	"main": "index.js",
 	{{#npmRepository}}
 	"publishConfig": {
 		"registry": "{{{npmRepository}}}"
-	}
+	},
 	{{/npmRepository}}
 	"dependencies": {
 		"@types/swagger-schema-official": "latest",

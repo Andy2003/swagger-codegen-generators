@@ -12,14 +12,14 @@ import java.util.Map;
 /**
  * Generates a TypeScript Typings for the sagger-js client library.
  */
-public class TypeScriptTypingsCodegen extends AbstractTypeScriptClientCodegen {
+public class TypeScriptSwaggerJsTypingsCodegen extends AbstractTypeScriptClientCodegen {
 
     private static final String GENERATOR_ID = "typescript-swagger-js-typings";
     private static final String NPM_NAME = "npmName";
     private static final String NPM_VERSION = "npmVersion";
     private static final String NPM_REPOSITORY = "npmRepository";
 
-    public TypeScriptTypingsCodegen() {
+    public TypeScriptSwaggerJsTypingsCodegen() {
         super();
         this.cliOptions.add(new CliOption(NPM_NAME, "The name under which you want to publish generated npm package"));
         this.cliOptions.add(new CliOption(NPM_VERSION, "The version of your npm package"));
