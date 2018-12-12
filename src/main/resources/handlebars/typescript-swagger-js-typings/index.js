@@ -1,4 +1,4 @@
-var spec = require('api.json');
+var spec = require('./api.json');
 var Swagger = require('swagger-client');
 
 module.exports = function (options) {
