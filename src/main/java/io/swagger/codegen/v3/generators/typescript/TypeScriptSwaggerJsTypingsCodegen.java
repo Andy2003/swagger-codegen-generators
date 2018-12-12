@@ -2,11 +2,14 @@ package io.swagger.codegen.v3.generators.typescript;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.codegen.v3.CliOption;
+import io.swagger.codegen.v3.CodegenOperation;
 import io.swagger.codegen.v3.SupportingFile;
 import io.swagger.util.Json;
+import io.swagger.v3.oas.models.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -73,6 +76,28 @@ public class TypeScriptSwaggerJsTypingsCodegen extends AbstractTypeScriptClientC
     }
 
     @Override
+    public Map<String, Object> postProcessOperations(Map<String, Object> operations) {
+        operations = super.postProcessOperations(operations);
+        determineApiTagName(operations);
+        return operations;
+    }
+
+    private void determineApiTagName(Map<String, Object> operations) {
+        Map<String, Object> objs = (Map<String, Object>) operations.get("operations");
+        String apiClassName = (String) objs.get("classname");
+        List<CodegenOperation> ops = (List<CodegenOperation>) objs.get("operation");
+        for (CodegenOperation op : ops) {
+            for (Tag tag : op.getTags()) {
+                String tagApiName = toApiName(sanitizeTag(tag.getName()));
+                if (tagApiName.equals(apiClassName)) {
+                    operations.put("tagName", tag.getName());
+                    return;
+                }
+            }
+        }
+    }
+
+    @Override
     public Map<String, Object> postProcessSupportingFileData(Map<String, Object> objs) {
         try {
             objs.put("openAPIJson", Json.mapper().writeValueAsString(objs.get("openAPI")));
@@ -81,6 +106,4 @@ public class TypeScriptSwaggerJsTypingsCodegen extends AbstractTypeScriptClientC
         }
         return objs;
     }
-
-
 }

@@ -5,7 +5,7 @@ import { {{classname}} } from './api/{{classname}}';
 
 export type Api = {
 	{{#apis}}
-	{{#operations}}{{ pathPrefix }}: {{ classname }}{{/operations}}{{^@last}},{{/@last}}
+	{{#operations}}'{{ tagName }}': {{ classname }}{{/operations}}{{^@last}},{{/@last}}
 	{{/apis}}
 }
 {{/apiInfo}}
