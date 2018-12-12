@@ -53,7 +53,7 @@ public class TypeScriptSwaggerJsTypingsCodegen extends AbstractTypeScriptClientC
         }
 
         modelTemplateFiles.put("model.mustache", ".d.ts");
-        apiTemplateFiles.put("api.interface.mustache", ".ts");
+        apiTemplateFiles.put("api.interface.mustache", ".d.ts");
 
         apiPackage = "api";
         modelPackage = "model";
@@ -61,7 +61,7 @@ public class TypeScriptSwaggerJsTypingsCodegen extends AbstractTypeScriptClientC
         supportingFiles.add(new SupportingFile("README.mustache", "README.md"));
         supportingFiles.add(new SupportingFile("package.mustache", "package.json"));
         supportingFiles.add(new SupportingFile("swagger-client.d.ts", "swagger-client.d.ts"));
-        supportingFiles.add(new SupportingFile("index.d.ts", "index.d.ts"));
+        supportingFiles.add(new SupportingFile("index.d.ts.mustache", "index.d.ts"));
         supportingFiles.add(new SupportingFile("index.js", "index.js"));
         supportingFiles.add(new SupportingFile("api.mustache", "api.d.ts"));
         supportingFiles.add(new SupportingFile("api.json.mustache", "api.json"));

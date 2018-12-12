@@ -1,0 +1,11 @@
+import { SwaggerClient } from 'swagger-client';
+import { Api } from './api';
+
+{{#models}}
+{{#model}}
+export * from './model/{{{ classFilename }}}';
+{{/model}}
+{{/models}}
+
+declare const api: SwaggerClient<Api>;
+export default api;
