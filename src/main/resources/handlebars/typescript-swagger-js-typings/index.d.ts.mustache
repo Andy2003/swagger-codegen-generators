@@ -1,4 +1,4 @@
-import { SwaggerClient } from 'swagger-client';
+import { SwaggerClient, SwaggerInit } from 'swagger-client';
 import { Api } from './api';
 
 {{#models}}
@@ -7,5 +7,9 @@ export * from './model/{{{ classFilename }}}';
 {{/model}}
 {{/models}}
 
-declare const api: SwaggerClient<Api>;
+interface Init extends SwaggerInit {
+  defaultUrl?: string;
+}
+
+declare const api: (init: Init) => ReturnType<SwaggerClient<Api>>;
 export default api;
