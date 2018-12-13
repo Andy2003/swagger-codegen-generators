@@ -8,7 +8,7 @@ export * from './model/{{{ classFilename }}}';
 {{/models}}
 
 interface Init extends SwaggerInit {
-  defaultUrl?: string;
+  baseUrl?: string;
 }
 
 declare const api: (init: Init) => ReturnType<SwaggerClient<Api>>;
