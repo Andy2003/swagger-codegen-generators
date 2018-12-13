@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static io.swagger.codegen.v3.CodegenConstants.IS_ENUM_EXT_NAME;
 import static io.swagger.codegen.v3.generators.handlebars.ExtensionHelper.getBooleanValue;
@@ -18,6 +20,7 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractTypeScriptClientCodegen.class);
 
     private static final String UNDEFINED_VALUE = "undefined";
+    private Pattern GENERIC_PATTERN = Pattern.compile("(\\w+)<(.+)>");
 
     protected String modelPropertyNaming = "camelCase";
     protected Boolean supportsES6 = true;
@@ -125,6 +128,15 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
         }
 
         return operations;
+    }
+
+    @Override
+    protected boolean needToImport(String type) {
+        Matcher matcher = GENERIC_PATTERN.matcher(type);
+        if (matcher.find()) {
+            return super.needToImport(matcher.group(1));
+        }
+        return super.needToImport(type);
     }
 
     public String toInstantiationType(Schema property) {
