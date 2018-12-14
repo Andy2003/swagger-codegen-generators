@@ -2682,7 +2682,7 @@ public abstract class DefaultCodegenConfig implements CodegenConfig {
         }
     }
 
-    private static List<CodegenParameter> addHasMore(List<CodegenParameter> objs) {
+    protected static List<CodegenParameter> addHasMore(List<CodegenParameter> objs) {
         if (objs != null) {
             for (int i = 0; i < objs.size(); i++) {
                 objs.get(i).secondaryParam = i > 0;

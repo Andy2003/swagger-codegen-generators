@@ -36,12 +36,21 @@ export interface {{classname}} {
 			{{/@last}}{{/isNot}}{{/allParams}}
 
 		},
-		options{{#bodyParam}}{{^required}}?{{/required}}{{/bodyParam}}{{^bodyParam}}?{{/bodyParam}}:{
+		options{{#bodyParam}}{{^required}}?{{/required}}{{/bodyParam}}{{^bodyParams}}{{^bodyParam}}?{{/bodyParam}}{{/bodyParams}}:{
 			{{#bodyParam}}{{#description}}
 			/**
 			* {{description}}
 			*/{{/description}}
 			requestBody{{^required}}?{{/required}}: {{{dataType}}}{{/bodyParam}}
+			{{^bodyParam}}
+			requestBody: {
+				{{#bodyParams}}{{#description}}
+				/**
+				* {{description}}
+				*/{{/description}}
+				{{paramName}}{{^required}}?{{/required}}: {{{dataType}}}{{/bodyParams}}
+			}
+			{{/bodyParam}}
 		}
 	) => {{#responses}}
 		{{^@first}}| {{/@first}}{

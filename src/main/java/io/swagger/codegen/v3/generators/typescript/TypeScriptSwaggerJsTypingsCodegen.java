@@ -1,16 +1,19 @@
 package io.swagger.codegen.v3.generators.typescript;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.swagger.codegen.v3.CliOption;
-import io.swagger.codegen.v3.CodegenOperation;
-import io.swagger.codegen.v3.SupportingFile;
+import io.swagger.codegen.v3.*;
 import io.swagger.util.Json;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Generates a TypeScript Typings for the sagger-js client library.
@@ -105,5 +108,26 @@ public class TypeScriptSwaggerJsTypingsCodegen extends AbstractTypeScriptClientC
             e.printStackTrace();
         }
         return objs;
+    }
+
+    @Override
+    public CodegenOperation fromOperation(String path, String httpMethod, Operation operation, Map<String, Schema> schemas, OpenAPI openAPI) {
+        CodegenOperation codegenOperation = super.fromOperation(path, httpMethod, operation, schemas, openAPI);
+        moveMultipartFormIntoBody(codegenOperation);
+        return codegenOperation;
+    }
+
+    private void moveMultipartFormIntoBody(CodegenOperation codegenOperation) {
+        for (Iterator<CodegenParameter> iterator = codegenOperation.formParams.iterator(); iterator.hasNext(); ) {
+            CodegenParameter formParam = iterator.next();
+            if (Objects.equals(formParam.getVendorExtensions().get(CodegenConstants.IS_MULTIPART_EXT_NAME), Boolean.TRUE)) {
+                iterator.remove();
+                formParam.getVendorExtensions().put(CodegenConstants.IS_BODY_PARAM_EXT_NAME, Boolean.TRUE);
+                formParam.getVendorExtensions().put(CodegenConstants.IS_FORM_PARAM_EXT_NAME, Boolean.FALSE);
+                codegenOperation.bodyParams.add(formParam);
+            }
+        }
+        codegenOperation.bodyParams = addHasMore(codegenOperation.bodyParams);
+        codegenOperation.formParams = addHasMore(codegenOperation.formParams);
     }
 }
