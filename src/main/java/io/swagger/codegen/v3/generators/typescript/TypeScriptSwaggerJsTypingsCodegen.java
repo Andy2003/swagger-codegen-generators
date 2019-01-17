@@ -1,8 +1,9 @@
 package io.swagger.codegen.v3.generators.typescript;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.swagger.codegen.v3.*;
-import io.swagger.util.Json;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Schema;
@@ -102,8 +103,10 @@ public class TypeScriptSwaggerJsTypingsCodegen extends AbstractTypeScriptClientC
 
     @Override
     public Map<String, Object> postProcessSupportingFileData(Map<String, Object> objs) {
+        ObjectMapper om = new ObjectMapper();
+        om = om.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true);
         try {
-            objs.put("openAPIJson", Json.mapper().writeValueAsString(objs.get("openAPI")));
+            objs.put("openAPIJson", om.writeValueAsString(objs.get("openAPI")));
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
