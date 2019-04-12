@@ -132,12 +132,17 @@ public abstract class AbstractTypeScriptClientCodegen extends DefaultCodegenConf
     }
 
     @Override
-    protected boolean needToImport(String type) {
+    protected void addImport(CodegenModel m, String type) {
+        if (type == null) {
+            return;
+        }
         Matcher matcher = GENERIC_PATTERN.matcher(type);
         if (matcher.find()) {
-            return super.needToImport(matcher.group(1));
+            addImport(m, matcher.group(1));
+            addImport(m, matcher.group(2));
+        } else {
+            super.addImport(m, type);
         }
-        return super.needToImport(type);
     }
 
     public String toInstantiationType(Schema property) {
