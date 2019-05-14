@@ -34,6 +34,7 @@ public class TypeScriptSwaggerJsTypingsCodegen extends AbstractTypeScriptClientC
                 "Use this property to set an url your private npmRepo in the package.json"));
 
         this.outputFolder = "generated-code" + File.separator + GENERATOR_ID;
+        this.typeMapping.put("DateTime", "string");
     }
 
     @Override
