@@ -66,7 +66,7 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.0</version>
+                <version>3.0.0-M5</version>
                 <configuration>
                     <argLine>
                         -javaagent:${settings.localRepository}/org/jmockit/jmockit/${jmockit-version}/jmockit-${jmockit-version}.jar
@@ -181,7 +181,7 @@
         <surefire-version>2.19.1</surefire-version>
         <jmockit-version>1.42</jmockit-version>
         <reflections-version>0.9.10</reflections-version>
-        <swagger-codegen-version>3.0.4-SNAPSHOT</swagger-codegen-version>
+        <swagger-codegen-version>3.0.4</swagger-codegen-version>
     </properties>
 
 </project>
